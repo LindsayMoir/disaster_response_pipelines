@@ -198,12 +198,9 @@ def main():
 
         # Instantiate parameters for grid search
         parameters = {'vect__min_df': [5],
-                      'tfidf__use_idf':[False],
-                      'clf__criterion': 'entropy',
-                      'clf__estimator__n_estimators':[50, 100], 
-                      'clf__estimator__min_samples_split':[5],
-                      'clf__max_depth': 40,
-                      'clf__max_features': 'auto'}
+                  'tfidf__use_idf':[False],
+                  'clf__estimator__n_estimators':[50, 100], 
+                  'clf__estimator__min_samples_split':[5]}
 
         print('Building model GridSearchCV and returning cv and best performing parameters based on X_train and Y_train ...')
         cv = build_gscv_models(X_train, Y_train, parameters)
