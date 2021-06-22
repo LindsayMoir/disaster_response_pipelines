@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[70]:
 
 
 # import libraries
@@ -10,7 +10,7 @@ import pandas as pd
 import sqlite3
 
 
-# In[3]:
+# In[71]:
 
 
 def clean_categories(categories):
@@ -40,7 +40,7 @@ def clean_categories(categories):
     # Get the mode
     mode_ = categories_encoded['related'].mode()[0]
     
-    # The related column has 3 unique labels [0,1,2]. Replace the 2 with the mode of the column (either 0 or 1)
+    # The request column has 3 unique labels [0,1,2]. Replace the 2 with the mode of the column (either 0 or 1)
     categories_encoded['related'] = categories_encoded['related'].replace(2, mode_)
         
     # Add the id column
@@ -49,7 +49,7 @@ def clean_categories(categories):
     return categories_encoded
 
 
-# In[4]:
+# In[72]:
 
 
 def clean_merged(df):
@@ -70,7 +70,7 @@ def clean_merged(df):
     return df
 
 
-# In[5]:
+# In[73]:
 
 
 def load_db(df, db):
@@ -88,45 +88,68 @@ def load_db(df, db):
     return
 
 
-# In[6]:
+# In[74]:
+
+
+def driver(file_1, file_2, db):
+    
+    """Function that drives the etl to completion
+    inputs
+    file_1: str: 'disaster_messages.csv'
+    fil_2: str: 'disaster_categories.csv'
+    db: str: 'drp.db'
+    """
+        
+    print('Loading data...\n    MESSAGES: {}\n    CATEGORIES: {}'.format(file_1, file_2))
+    # load messages dataset
+    messages = pd.read_csv(file_1)
+
+    # load categories dataset
+    categories = pd.read_csv(file_2)
+
+    print('Cleaning data...')
+    # Clean categories
+    categories = clean_categories(categories)
+
+    # merge dataframes
+    df = messages.merge(categories)
+
+    # clean merged df
+    df = clean_merged(df)
+
+    print('Saving data...\n    DATABASE: {}'.format(db))
+    # write to sqlite
+    load_db(df, db)
+
+    # status
+    print('Cleaned data saved to database!')
+    
+    return
+
+
+# In[75]:
 
 
 def main():
-    if len(sys.argv) == 4:
-
-        file_1, file_2, db = sys.argv[1:]
-        
-        print('Loading data...\n    MESSAGES: {}\n    CATEGORIES: {}'.format(file_1, file_2))
-        # load messages dataset
-        messages = pd.read_csv(file_1)
-
-        # load categories dataset
-        categories = pd.read_csv(file_2)
-        
-        print('Cleaning data...')
-        # Clean categories
-        categories = clean_categories(categories)
-
-        # merge dataframes
-        df = messages.merge(categories)
-
-        # clean merged df
-        df = clean_merged(df)
-        
-        print('Saving data...\n    DATABASE: {}'.format(db))
-        # write to sqlite
-        load_db(df, db)
-
-        # status
-        print('Cleaned data saved to database!')
+    """Check and see if this is running in the command line or from Jupyter"""
     
+    # Command line
+    if len(sys.argv) == 4 sys.argv[0] == '-c':
+        file_1, file_2, db = sys.argv[1:]
+        driver(file_1, file_2, db)
+    
+    # Jupyter
+    elif sys.argv[1] == '-f':
+        driver('disaster_messages.csv', 'disaster_categories.csv', 'drp.db')
+    
+    # Wrong arguments
     else:
-        print('Please provide the filepaths of the messages and categories '              'datasets as the first and second argument respectively, as '              'well as the filepath of the database to save the cleaned data '              'to as the third argument. \n\nExample: python process_data.py '              'disaster_messages.csv disaster_categories.csv '              'DisasterResponse.db')
+        print('Please provide the filepaths of the messages and categories '              'datasets as the first and second argument respectively, as '              'well as the filepath of the database to save the cleaned data '              'to as the third argument. \n\nExample: etl.py '              'disaster_messages.csv disaster_categories.csv '              'drp.db')
         
     return
 
 
-# In[7]:
+# In[76]:
 
 
 if __name__ == '__main__':

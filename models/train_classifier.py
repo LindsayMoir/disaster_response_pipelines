@@ -5,7 +5,7 @@
 # 
 # This will run from the anaconda prompt via python train_classifier_command_line.py ..\data\drp.db ..\data\model.pkl.
 
-# In[1]:
+# In[17]:
 
 
 # import libraries
@@ -34,10 +34,12 @@ import sys
 import time
 
 
-# In[8]:
+# In[18]:
 
 
 def load_data(database_filepath):
+    
+    print('database_filepath is:', database_filepath)
     
     """Read the input file, write the dataframe to sqlite, and create the independent and dependent arrays
     inputs:
@@ -65,7 +67,7 @@ def load_data(database_filepath):
     return X, Y, cols, con
 
 
-# In[9]:
+# In[19]:
 
 
 def tokenize(text):
@@ -99,7 +101,7 @@ def tokenize(text):
     return tokens
 
 
-# In[10]:
+# In[20]:
 
 
 def build_gscv_models(X_train, Y_train, parameters):
@@ -138,7 +140,7 @@ def build_gscv_models(X_train, Y_train, parameters):
     return cv
 
 
-# In[11]:
+# In[21]:
 
 
 def evaluate_model(y_true, y_pred, cols):
@@ -170,12 +172,12 @@ def evaluate_model(y_true, y_pred, cols):
                         columns = ['accuracy', 'precision', 'recall','f1'])
 
 
-# In[13]:
+# In[22]:
 
 
-def main():
-
-    """Function that drives the etl to completion
+def driver(database_filepath, model_filepath):
+    
+    """Function that drives the classifier to completion
     inputs
     database_filepath: str: location of database on the computer in file system
     model_filepath: str: location of the model on the computer in file system
@@ -183,57 +185,76 @@ def main():
     Saves model to disk
     """
     
+    print('Loading data...\n    DATABASE: {}'.format(database_filepath))
+
+     # Load data
+    X, Y, category_names, con = load_data(database_filepath)
+
+    # Split into train and test sets
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
+
+    # Instantiate parameters for grid search
+    parameters = {'vect__min_df': [5],
+              'tfidf__use_idf':[False],
+              'clf__estimator__n_estimators':[50, 100], 
+              'clf__estimator__min_samples_split':[5]}
+
+    print('Building model GridSearchCV and returning cv and best performing parameters based on X_train and Y_train ...')
+    cv = build_gscv_models(X_train, Y_train, parameters)
+
+    # The cv.best_esimator is ALREADY fit. No need to fit. Just predict
+    print('Using best estimator to get predictions ...')
+    # predict on test data
+    model = cv.best_estimator_
+    y_pred = model.predict(X_test)
+
+    print('Scoring best estimator ...')
+    score_df = evaluate_model(Y_test, y_pred, category_names)
+    print(score_df)
+
+    print('Writing scores to the db ...')
+    # Write the df_score to the table scores
+    score_df.to_sql('scores', con, if_exists = 'replace')
+
+    # close the sqlite connection
+    con.close()
+
+    print('Saving model...\n    MODEL: {}'.format(model_filepath))
+    pickle.dump(model, open(model_filepath, 'wb'))
+
+    print('Trained model saved!')
+    
+    return
+    
+
+
+# In[35]:
+
+
+def main():
+    """See how long this takes in minutes. 
+    Check and see if this is running in the command line or from Jupyter"""
+    print(sys.argv)
     # Get the start time
     start_time = time.time()
-
-    if len(sys.argv) == 3:
+    
+    # Command line
+    if len(sys.argv) == 3 and sys.argv[0] == '-c':
         database_filepath, model_filepath = sys.argv[1:]
-        print('Loading data...\n    DATABASE: {}'.format(database_filepath))
-
-         # Load data
-        X, Y, category_names, con = load_data(database_filepath)
-
-        # Split into train and test sets
-        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
-
-        # Instantiate parameters for grid search
-        parameters = {'vect__min_df': [5],
-                  'tfidf__use_idf':[False],
-                  'clf__estimator__n_estimators':[50, 100], 
-                  'clf__estimator__min_samples_split':[5]}
-
-        print('Building model GridSearchCV and returning cv and best performing parameters based on X_train and Y_train ...')
-        cv = build_gscv_models(X_train, Y_train, parameters)
-
-        # The cv.best_esimator is ALREADY fit. No need to fit. Just predict
-        print('Using best estimator to get predictions ...')
-        # predict on test data
-        model = cv.best_estimator_
-        y_pred = model.predict(X_test)
-
-        print('Scoring best estimator ...')
-        score_df = evaluate_model(Y_test, y_pred, category_names)
-        print(score_df)
-        
-        print('Writing scores to the db ...')
-        # Write the df_score to the table scores
-        score_df.to_sql('scores', con, if_exists = 'replace')
-        
-        # close the sqlite connection
-        con.close()
-
-        print('Saving model...\n    MODEL: {}'.format(model_filepath))
-        pickle.dump(model, open('model.pkl', 'wb'))
-
-        print('Trained model saved!')
-
+        driver(database_filepath, model_filepath)
+    
+    # Jupyter
+    elif sys.argv[1] == '-f':
+        driver('../data/drp.db', 'model.pkl')
+    
+    # Wrong arguments
     else:
-        print('Please provide the filepath of the disaster messages database '              'as the first argument and the filepath of the pickle file to '              'save the model to as the second argument. \n\nExample: python '              'train_classifier.py ../data/DisasterResponse.db classifier.pkl')
+        print('Please provide the filepath of the disaster messages database '              'as the first argument and the filepath of the pickle file to '              'save the model to as the second argument. \n\nExample: python '              'train_classifier.py ../data/drp.db model.pkl')
     
     # print how long this took
     print("\n--- %s minutes ---" % ((time.time() - start_time)/60))
     
-    return score_df
+    return
 
 
 # In[ ]:
@@ -241,4 +262,10 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# In[ ]:
+
+
+
 
