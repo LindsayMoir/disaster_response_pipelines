@@ -42,15 +42,26 @@ The dataset is VERY imbalanced. As a result the precision, recall, and f1 scores
 - sqlite		 3.35.4
 
 
-## Instructions  <a name="instructions"></a>
+## Instructions <a name="instructions"></a>
 
 To clone the github repository go to https://github.com/LindsayMoir/disaster_response_pipelines
 
 Example:
-- python etl.py disaster_messages.csv disaster_categories.csv drp.db
-- python train_classifier.py ../data/drp.db model.pkl
-- python run.py
-- go to http://0.0.0.0:3001/
+
+(nlp)> cd data          # Change your working directory to data
+
+(nlp)> python etl.py disaster_messages.csv disaster_categories.csv drp.db
+
+(nlp) > cd models        # Change your working directory to models
+
+(nlp) > python train_classifier.py ../data/drp.db model.pkl
+
+(nlp) > cd app           # Change your working directory to app
+
+(nlp) > python run.py
+
+- go to http://0.0.0.0:3001/ in your web browser
+Follow these instructions for running the web app at the * [Project Details Page](https://classroom.udacity.com/nanodegrees/nd025/parts/ba5d2f25-63d2-4db8-afb1-7a37dd792b4a/modules/1112326c-bdb1-4119-b907-4098a0e4277d/lessons/743ff0a6-7500-4de6-8477-ea822eeda8b8/concepts/6f0d69e6-1f5e-413e-8176-6b80a9bc8ad3)
 
 
 ## Files <a name="files"></a>
