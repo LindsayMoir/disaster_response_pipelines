@@ -9,7 +9,7 @@
 # import libraries
 import json
 import nltk
-nltk.download(['punkt', 'stopwords', 'wordnet'])
+# nltk.download(['punkt', 'stopwords', 'wordnet'])
 from nltk.corpus import stopwords
 from nltk import download
 from nltk.stem.wordnet import WordNetLemmatizer
@@ -19,7 +19,7 @@ from flask import render_template, request, jsonify
 import pandas as pd
 import pickle
 import plotly
-from plotly.graph_objs import Bar, Line
+from plotly.graph_objs import Bar, Scatter
 import sqlite3
 import string
 
@@ -28,8 +28,8 @@ import string
 
 
 # We had a problem with unpickling the model. Supposedly this will work. 
-# That is taking out the function and importing.
-import tokenize
+# That is taking out the function and importing it. It WORKED!
+from tokenizer import tokenize
 
 
 # In[67]:
@@ -56,14 +56,25 @@ df_scores = pd.read_sql_query(sql, con)
 # close the sqlite connection
 con.close()
 
-# Rename the first column to category
+# data for first plot
+genre_counts = df.groupby('genre').count()['message']
+genre_names = list(genre_counts.index)
+
+# Add up the number of messages per category in sorted order for the second plot.
+df_2nd = df.iloc[:, 3:].sum().sort_values().reset_index()
+
+# change column names to category and count
+df_2nd.columns = ['category','count']
+
+# Rename the first column to category for df_scores
 df_scores.rename(columns = {df_scores.columns[0]: 'category'}, inplace=True)
 
-# Melt the df_scores to make it easy to do a line plot
-df_melt = df_scores.melt(id_vars = 'category', 
-                         value_vars = ['accuracy', 'precision', 'recall', 'f1'],
-                         var_name = 'metric',
-                         value_name = 'score')
+# We want the same sort order for df_scores categories as for df_2nd.
+# Append the count to df_scores via merge
+df_scores = df_scores.merge(df_2nd, on = 'category')
+
+# Sort df_scores by count
+df_scores.sort_values('count', inplace = True)
 
 # load model
 model = pickle.load(open("../models/model.pkl", "rb"))
@@ -78,23 +89,17 @@ model = pickle.load(open("../models/model.pkl", "rb"))
 def index():
     
     """Does plotting for the web page. There are 3 plots. 2 bar plots and 1 line plot. 
-    The line plot is based on the scoring of the model"""
-    
-    # Add up the number of messages per category in sorted order for the second plot.
-    df_2nd = df.iloc[:, 3:].sum().sort_values().reset_index()
-    
-    # change column names to Category and Count
-    df_2nd.columns = ['category','count']
+    The line plot is based on the scoring of the model. DO NOT manipulate the data in this function.
+    Do all data manipulations in the global area above. They often DO NOT carry over to here."""
 
     # create visuals
-
     
     graphs = [
         {
             'data': [
                 Bar(
-                    x = list(genre_counts.index),
-                    y = df.groupby('genre').count()['message']
+                    x = genre_names,
+                    y = genre_counts
                 )
             ],
 
@@ -111,39 +116,51 @@ def index():
         {
             'data': [
                 Bar(
-                    x = df_2nd['count'],
-                    y = df_2nd['category'],
-                    orientation = 'h',
+                    x = df_2nd['category'],
+                    y = df_2nd['count'],
                     marker = dict(color='green')
                 )
             ],
 
             'layout': {
-                'title': "Numbers of Messages Per Message Category",
-                'xaxis': {
-                    'title':"Message Numbers"
-                }
+                'title': "Numbers of Messages Per Message Category"
             }
         },
-        {
+                {
             'data': [
-                Line(
-                    x = df_melt['category'],
-                    y = df_melt['score'],
-                    color = df_melt['metric']
+                Scatter(
+                    x = df_scores['category'],
+                    y = df_scores['accuracy'],
+                    name = 'Accuracy'
+                ),
+                Scatter(
+                    x = df_scores['category'],
+                    y = df_scores['precision'],
+                    name = 'Precision'
+                ),
+                Scatter(
+                    x = df_scores['category'],
+                    y = df_scores['recall'],
+                    name = 'Recall'
+                ),
+                Scatter(
+                    x = df_scores['category'],
+                    y = df_scores['f1'],
+                    name = 'F1'
                 )
             ],
 
             'layout': {
-                'title': 'Accuracy, Precision, Recall, and F1 Scores For The Classification Model',
+                'title': 'Evaluation Metrics For Each Category',
                 'xaxis': {
-                    'title':"Categories",
+                    'title':"",
                 },
                 'yaxis': {
-                    'title': "Score"
+                    'title': "Score",
                 }
             }
         }
+
     ]
 
     # encode plotly graphs in JSON

@@ -217,7 +217,7 @@ def main():
         
         print('Writing scores to the db ...')
         # Write the df_score to the table scores
-        score_df.to_sql('scores', con, if_exists = 'replace', index = False)
+        score_df.to_sql('scores', con, if_exists = 'replace')
         
         # close the sqlite connection
         con.close()
