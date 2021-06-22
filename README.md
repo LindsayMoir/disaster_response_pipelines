@@ -26,12 +26,11 @@ The project consists of reading the input messages and the labelled dataset (36 
 
 The dataset is VERY imbalanced. As a result the precision, recall, and f1 scores vary dramatically as the model struggles to classify categories with little data. This visualization pretty much tells you the story. Accuracy is reasonable, the other metrics vary wildly by category.
 
-![Model Result](img/scores.png)
+![Model Result](images/graphs.jpg)
 
 
 ## Environment <a name="env"></a>
 
-- Package		 Version
 - flask   	 1.1.2
 - nltk		 3.5
 - numpy		 1.20.3
@@ -45,24 +44,13 @@ The dataset is VERY imbalanced. As a result the precision, recall, and f1 scores
 
 ## Instructions  <a name="instructions"></a>
 
-1. Run the following commands in the project's root directory to set up your database and model.
-
-    - To run ETL pipeline that cleans data and stores in database in data
-        `python data/etl.py data/disaster_messages.csv data/disaster_categories.csv data/drp.db`
-    - To run ML pipeline that trains classifier and saves model in models
-        `python models/train_classifier_command_line.py data/drp.db models/model.pkl`
-
-2. Run the following command in the app's directory to run your web app.
-    `python run.py`
-
-3. Go to http://0.0.0.0:3001/
-
-4. To clone the github repository go to https://github.com/LindsayMoir/disaster_response_pipelines
+To clone the github repository go to https://github.com/LindsayMoir/disaster_response_pipelines
 
 Example:
 - python etl.py disaster_messages.csv disaster_categories.csv drp.db
 - python train_classifier.py ../data/drp.db model.pkl
 - python run.py
+- go to http://0.0.0.0:3001/
 
 
 ## Files <a name="files"></a>
@@ -96,21 +84,10 @@ The etl.py file in the data folder reads in the 2 .csv files, cleans them up, me
 ## Model <a name="model"></a>
 
 1. Provides a tokenization function that cleans the data and then creates tokens (words) for the pipeline.
-2. I use CountVectorizer, TfidfTransformer to create the vectors necessary for RandomForestClassifier to classify the messages. This is all done in a Pipeline to create a more manageable, maintainable, and easier to write code. 
-3. Used sklearn.train_test_split to create train and test sets for the pipeline.
-4. Used GridSearchCV to manage the grid search and the Cross Fold Validation required for this project.
-5. Then using GridSearchCv with 5 fold cross-validation I fitted 120 models to find the best random forest model for predicting disaster response category. The Random Forest best parameters were:
-<code>
-# Instantiate parameters for grid search
-parameters = {'vect__min_df': [5],
-              'tfidf__use_idf':[False],
-              'clf__criterion': 'entropy',
-              'clf__estimator__n_estimators':[100], 
-              'clf__estimator__min_samples_split':[5],
-              'clf__max_depth': 40,
-              'clf__max_features': 'auto'}
-</code>
-
+2. I use CountVectorizer and TfidfTransformer to create the vectors necessary for RandomForestClassifier to classify the messages. This is all done in a Pipeline to create more manageable and maintainable code. 
+3. I used sklearn.train_test_split to create train and test sets for the pipeline.
+4. I used GridSearchCV to manage the grid search and the Cross Fold Validation required for this project.
+5. Then using GridSearchCv with 5 fold cross-validation I fitted 120 models to find the best random forest model for predicting the category. 
 6. The best_estimator_ from these alternatives was saved as model.pkl and is used in the web app.
 
 
@@ -123,7 +100,7 @@ parameters = {'vect__min_df': [5],
 ## Screenshots <a name="screen"></a>
 
 This is the frontpage:
-![Disaster Response Pipeline Home Page](img/index.png)
+![Disaster Response Pipeline Index Page](images/index.jpg)
 By inputting a word, you can check its category:
-![Disaster Response Pipeline Result Page](img/graphs.png)
+![Disaster Response Pipeline Result Page](images/results.png)
    
