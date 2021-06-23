@@ -134,7 +134,7 @@ def main():
     """Check and see if this is running in the command line or from Jupyter"""
     
     # Command line
-    if len(sys.argv) == 4 sys.argv[0] == '-c':
+    if len(sys.argv) == 4 and sys.argv[0] == 'etl.py':
         file_1, file_2, db = sys.argv[1:]
         driver(file_1, file_2, db)
     

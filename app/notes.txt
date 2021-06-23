@@ -1,3 +1,7 @@
 env|grep WORK
 
 https://view6914b2f4-3001.udacity-student-workspaces.com/
+
+python etl.py disaster_messages.csv disaster_categories.csv drp.db
+
+python train_classifier.py ../data/drp.db model.pkl

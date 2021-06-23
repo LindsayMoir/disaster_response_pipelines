@@ -234,12 +234,12 @@ def driver(database_filepath, model_filepath):
 def main():
     """See how long this takes in minutes. 
     Check and see if this is running in the command line or from Jupyter"""
-    print(sys.argv)
+
     # Get the start time
     start_time = time.time()
     
     # Command line
-    if len(sys.argv) == 3 and sys.argv[0] == '-c':
+    if len(sys.argv) == 3 and sys.argv[0] == 'train_classifier.py':
         database_filepath, model_filepath = sys.argv[1:]
         driver(database_filepath, model_filepath)
     
